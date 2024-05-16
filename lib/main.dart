@@ -1,29 +1,25 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
-import 'app_router.dart';
-
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
-
-  final _appRouter = AppRouter();
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return MaterialApp(
       theme: ThemeData(
         useMaterial3: true,
       ),
-      routerConfig: _appRouter.config(),
+      routes: {
+        '/': (_) => const ParentPage(),
+      },
     );
   }
 }
 
-@RoutePage()
 class ParentPage extends StatelessWidget {
   const ParentPage({super.key});
 
@@ -35,13 +31,22 @@ class ParentPage extends StatelessWidget {
         Container(
           color: Theme.of(context).colorScheme.secondaryContainer,
         ),
-        const AutoRouter(),
+        Navigator(
+          pages: const [
+            MaterialPage(
+              key: ValueKey('ChildPage'),
+              child: ChildPage(),
+            ),
+          ],
+          onPopPage: (route, result) {
+            return true;
+          },
+        ),
       ],
     );
   }
 }
 
-@RoutePage()
 class ChildPage extends StatelessWidget {
   const ChildPage({super.key});
 
