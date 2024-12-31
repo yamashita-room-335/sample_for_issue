@@ -18,34 +18,30 @@ class MyListItem with _$MyListItem {
 @riverpod
 class MyListItemViewModel extends _$MyListItemViewModel {
   @override
-  List<MyListItem> build() {
-    return [
-      MyListItem(
+  Map<String, MyListItem> build() {
+    return {
+      '1': MyListItem(
         id: '1',
         text: '1',
       ),
-      MyListItem(
+      '2': MyListItem(
         id: '2',
         text: '2',
       ),
-      MyListItem(
+      '3': MyListItem(
         id: '3',
         text: '3',
       ),
-    ];
-  }
-
-  void editItem(int index, String text) {
-    final newList = [...state];
-    newList[index] = newList[index].copyWith(text: text);
-    state = newList;
+    };
   }
 
   void onReorder(int oldIndex, int newIndex) {
-    final newList = [...state];
-    final item = newList.removeAt(oldIndex);
-    newList.insert(newIndex, item);
-    state = newList;
+    final keys = state.keys.toList();
+    final key = keys.removeAt(oldIndex);
+    keys.insert(newIndex, key);
+    final newMap =
+        Map.fromEntries(keys.map((key) => MapEntry(key, state[key]!)));
+    state = newMap;
   }
 }
 
@@ -80,33 +76,30 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          Consumer(builder: (context, ref, child) {
-            return IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                ref
-                    .read(myListItemViewModelProvider.notifier)
-                    .editItem(1, 'edited');
-              },
-            );
-          }),
-        ],
       ),
       body: SafeArea(
         child: Consumer(builder: (context, ref, child) {
-          final List<MyListItem> items = ref.watch(myListItemViewModelProvider);
+          final Map<String, MyListItem> map =
+              ref.watch(myListItemViewModelProvider);
+          final sameInstanceList = map.entries.toList();
 
-          return AnimatedReorderableListView(
-            items: items,
+          return AnimatedReorderableListView<MapEntry<String, MyListItem>>(
+            items: map.entries.toList(),
+            nonDraggableItems: map.entries.toList(),
+            //　As shown in the code below, the behavior is correct (= not draggable) for the same instance.
+            // items: sameInstanceList,
+            // nonDraggableItems: sameInstanceList,
+            isSameItem: (a, b) => a.key == b.key,
             onReorder: (oldIndex, newIndex) => ref
                 .read(myListItemViewModelProvider.notifier)
                 .onReorder(oldIndex, newIndex),
             itemBuilder: (context, index) {
-              final item = items[index];
-              return ListTile(
-                key: ValueKey(item.id),
-                title: Text(item.text),
+              final item = map.entries.elementAt(index);
+              return Material(
+                key: ValueKey(item.value.id),
+                child: ListTile(
+                  title: Text(item.value.text),
+                ),
               );
             },
           );
